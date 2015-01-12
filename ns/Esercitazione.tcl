@@ -3,19 +3,19 @@ set ns [new Simulator]
 
 # files
 
-set fd [open out.nam w]
-$ns namtrace-all $fd
+#set fd [open out.nam w]
+#$ns namtrace-all $fd
 
-set tracefile [open tracefile.txt w]
+#set tracefile [open tracefile.txt w]
 
 
 # finish procedure
 
 proc finish {} {
-	global ns fd tracefile
-	$ns flush-trace
-	close $fd
-	close $tracefile
+	#global ns fd tracefile
+	#$ns flush-trace
+	#close $fd
+	#close $tracefile
 	#exec nam out.nam &
 	exit 0
 }
@@ -30,13 +30,6 @@ proc loss {rate na nb} {
 	$em1 ranvar [new RandomVariable/Uniform]
 	$em1 drop-target [new Agent/Null]
 	$ns lossmodel $em1 $na $nb	;#collega il lossmodel al link assegnato
-	
-	set em2 [new ErrorModel]
-	$em2 unit EU_PKT		;# errori a livello di pacchetto
-	$em2 set rate_ $rate
-	$em2 ranvar [new RandomVariable/Uniform]
-	$em2 drop-target [new Agent/Null]
-	$ns lossmodel $em2 $nb $na	;#collega il lossmodel al link assegnato
 }
 
 
@@ -75,7 +68,7 @@ $ns queue-limit $C $B 20
 
 # loss
 
-set lossrate 0.005
+set lossrate 0.05
 loss $lossrate $B $C
 loss $lossrate $C $B
 
@@ -120,11 +113,12 @@ $ftpDA attach-agent $agent_D_sender
 
 # data amount
 
-#set dataAD [expr 100 * 1024 * 1024]
-#set dataDA [expr 20 * 1024 * 1024]
+set dataAD [expr 100 * 1024 * 1024]
+set dataDA [expr 20 * 1024 * 1024]
 
-set dataAD [expr 100]
-set dataDA [expr 20]
+# debug
+# set dataAD [expr 100]
+# set dataDA [expr 20]
 
 # packet amount
 
@@ -168,16 +162,16 @@ proc check {} {
 	set receivedPacketsAD [$agent_A_sender set ack_]
 	set receivedPacketsDA [$agent_D_sender set ack_]
 	
-	puts "#$n) A received acks: $receivedPacketsAD ([$ns now])"
-	puts "#$n) D received acks: $receivedPacketsDA ([$ns now])"
+	#puts "#$n) A received acks: $receivedPacketsAD ([$ns now])"
+	#puts "#$n) D received acks: $receivedPacketsDA ([$ns now])"
 	
 	if { $expectedPacketsAD >= $receivedPacketsAD || $expectedPacketsDA >= $receivedPacketsDA } {
 		$ns at [expr [$ns now] + 0.1] "check"
 	} else {
 		set times($n) [$ns now]
+		puts "#$n completata"
 		set n [expr $n + 1]
 		$ns at [expr [$ns now] + 0.1] "simulation"
-		
 	}
 }
 
