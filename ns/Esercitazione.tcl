@@ -128,37 +128,46 @@ set dataDA [expr 20 * 1024 * 1024]
 set expectedPacketsAD [expr $dataAD / $packetSize]
 set expectedPacketsDA [expr $dataDA / $packetSize]
 
-puts "(AD) Mi aspetto $expectedPacketsAD pacchetti \n"
-puts "(DA) Mi aspetto $expectedPacketsDA pacchetti \n"
 
+# simulation & check procedures
 
-# check procedure
-
+set n 0
+set simulations 2 ;# numero di simulazioni
 set time 0
 
+proc simulation {} {
+	global ns ftpAD ftpDA n dataAD dataDA agent_A_sender agent_D_sender simulations
+	
+	if {$n == $simulations} {
+		$ns at [$ns now] "finish"
+	} else {
+		$ns at [expr [$ns now] + 0.1] "$ftpAD send $dataAD"
+		$ns at [expr [$ns now] + 0.1] "$ftpDA send $dataDA"
+		$ns at [expr [$ns now] + 0.2] "check"
+		$ns run
+	}
+}
+
 proc check {} {
-	global ns agent_A_sender agent_D_sender time expectedPacketsAD expectedPacketsDA
+	global ns agent_A_sender agent_D_sender time expectedPacketsAD expectedPacketsDA n
 	
 	set time [$ns now]
 	set time [expr $time + 0.1]
 
-	set receivedPacketsAD [eval $agent_A_sender set ack_]
-	set receivedPacketsDA [eval $agent_D_sender set ack_]
+	set receivedPacketsAD [$agent_A_sender set ack_]
+	set receivedPacketsDA [$agent_D_sender set ack_]
 	
-	puts "A received acks: $receivedPacketsAD"
-	puts "D receiveds acks: $receivedPacketsDA"
+	puts "(# $n) A received acks: $receivedPacketsAD ([$ns now])"
+	puts "(# $n) D received acks: $receivedPacketsDA ([$ns now])"
 	
 	if { $expectedPacketsAD >= $receivedPacketsAD || $expectedPacketsDA >= $receivedPacketsDA } {
 		$ns at $time "check"
 	} else {
-		$ns at $time "finish"
+		set n [expr $n + 1]
+		$ns at $time "simulation"
 	}
 }
 
 # run
 
-$ns at 0.1 "$ftpAD send $dataAD"
-$ns at 0.1 "$ftpDA send $dataDA"
-$ns at 0.2 "check"
-
-$ns run
+simulation
