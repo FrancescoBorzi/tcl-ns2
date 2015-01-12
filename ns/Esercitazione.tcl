@@ -1,19 +1,22 @@
 set ns [new Simulator]
 
 
-# nam output file
+# files
 
 set fd [open out.nam w]
 $ns namtrace-all $fd
+
+set tracefile [open tracefile.txt w]
 
 
 # finish procedure
 
 proc finish {} {
-	global ns fd
+	global ns fd tracefile
 	$ns flush-trace
 	close $fd
-	exec nam out.nam &
+	close $tracefile
+	#exec nam out.nam &
 	exit 0
 }
 
@@ -63,8 +66,11 @@ $D color green
 $ns duplex-link $A $B 100Mb 1ms DropTail
 $ns duplex-link $C $D 100Mb 1ms DropTail
 
-$ns simplex-link $B $C 7Mb 	 200ms DropTail
+$ns simplex-link $B $C 7Mb   200ms DropTail
 $ns simplex-link $C $B 480Kb 200ms DropTail
+
+$ns queue-limit $B $C 20
+$ns queue-limit $C $B 20
 
 
 # loss
@@ -78,6 +84,8 @@ loss $lossrate $C $B
 
 set agent_A_sender [new Agent/TCP]
 set agent_D_sender [new Agent/TCP]
+
+set packetSize [eval $agent_A_sender set packetSize_]
 
 set agent_A_receiver [new Agent/TCPSink]
 set agent_D_receiver [new Agent/TCPSink]
@@ -110,10 +118,47 @@ $ftpAD attach-agent $agent_A_sender
 $ftpDA attach-agent $agent_D_sender
 
 
+# data amount
+
+set dataAD [expr 100 * 1024 * 1024]
+set dataDA [expr 20 * 1024 * 1024]
+
+# packet amount
+
+set expectedPacketsAD [expr $dataAD / $packetSize]
+set expectedPacketsDA [expr $dataDA / $packetSize]
+
+puts "(AD) Mi aspetto $expectedPacketsAD pacchetti \n"
+puts "(DA) Mi aspetto $expectedPacketsDA pacchetti \n"
+
+
+# check procedure
+
+set time 0
+
+proc check {} {
+	global ns agent_A_sender agent_D_sender time expectedPacketsAD expectedPacketsDA
+	
+	set time [$ns now]
+	set time [expr $time + 0.1]
+
+	set receivedPacketsAD [eval $agent_A_sender set ack_]
+	set receivedPacketsDA [eval $agent_D_sender set ack_]
+	
+	puts "A received acks: $receivedPacketsAD"
+	puts "D receiveds acks: $receivedPacketsDA"
+	
+	if { $expectedPacketsAD >= $receivedPacketsAD || $expectedPacketsDA >= $receivedPacketsDA } {
+		$ns at $time "check"
+	} else {
+		$ns at $time "finish"
+	}
+}
+
 # run
 
-$ns at 0.1 "$ftpAD send 100MB"
-$ns at 0.1 "$ftpDA send 20MB"
-$ns at 8.0 "finish"
+$ns at 0.1 "$ftpAD send $dataAD"
+$ns at 0.1 "$ftpDA send $dataDA"
+$ns at 0.2 "check"
 
 $ns run
