@@ -68,7 +68,7 @@ $ns queue-limit $C $B 20
 
 # loss
 
-set lossrate 0.05
+set lossrate 0.005
 loss $lossrate $B $C
 loss $lossrate $C $B
 
@@ -136,17 +136,41 @@ proc simulation {} {
 	global ns ftpAD ftpDA n dataAD dataDA agent_A_sender agent_D_sender simulations times
 	
 	if {$n == $simulations} {
-		$ns at [$ns now] "finish"
-		
 		set deltaTimes(0) $times(0)
 
 		for { set i 1 } { $i < $simulations } { incr i } {
 			set deltaTimes($i) [expr "$times($i) - $times([expr "$i - 1"])"]
 		}
-		
+
+		set average 0
+
 		for { set i 0 } { $i < $simulations } {incr i} {
 			puts "$i) $deltaTimes($i) $times($i)"
+			set average [expr $average + $deltaTimes($i)]
 		}
+
+		set average [expr $average / $n]
+		puts "\nAverage: $average"
+
+		set deviation 0
+
+		for { set i 0 } { $i < $simulations } {incr i} {
+			set tmp [expr $deltaTimes($i) - $average]
+			set tmp [expr $tmp * $tmp]
+			set deviation [expr $deviation + $tmp]
+		}
+
+		set deviation [expr $deviation / $n]
+		set deviation [expr sqrt($deviation)]
+		puts "Standard deviation: $deviation"
+
+		set z 1.644854
+		set err [expr $z * $deviation * sqrt($n)]
+		set inf [expr $average - $err]
+		set sup [expr $average + $err]
+		puts "Confidence interval: ($inf - $sup)"
+
+		$ns at [$ns now] "finish"
 		
 	} else {
 		$ns at [expr [$ns now] + 0.1] "$ftpAD send $dataAD"
