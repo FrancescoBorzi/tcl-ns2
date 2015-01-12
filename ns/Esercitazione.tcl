@@ -120,8 +120,11 @@ $ftpDA attach-agent $agent_D_sender
 
 # data amount
 
-set dataAD [expr 100 * 1024 * 1024]
-set dataDA [expr 20 * 1024 * 1024]
+#set dataAD [expr 100 * 1024 * 1024]
+#set dataDA [expr 20 * 1024 * 1024]
+
+set dataAD [expr 100]
+set dataDA [expr 20]
 
 # packet amount
 
@@ -132,14 +135,25 @@ set expectedPacketsDA [expr $dataDA / $packetSize]
 # simulation & check procedures
 
 set n 0
-set simulations 2 ;# numero di simulazioni
-set time 0
+set simulations 10 ;# numero di simulazioni
+set times(0) 0
 
 proc simulation {} {
-	global ns ftpAD ftpDA n dataAD dataDA agent_A_sender agent_D_sender simulations
+	global ns ftpAD ftpDA n dataAD dataDA agent_A_sender agent_D_sender simulations times
 	
 	if {$n == $simulations} {
 		$ns at [$ns now] "finish"
+		
+		set deltaTimes(0) $times(0)
+
+		for { set i 1 } { $i < $simulations } { incr i } {
+			set deltaTimes($i) [expr "$times($i) - $times([expr "$i - 1"])"]
+		}
+		
+		for { set i 0 } { $i < $simulations } {incr i} {
+			puts "$i) $deltaTimes($i) $times($i)"
+		}
+		
 	} else {
 		$ns at [expr [$ns now] + 0.1] "$ftpAD send $dataAD"
 		$ns at [expr [$ns now] + 0.1] "$ftpDA send $dataDA"
@@ -149,22 +163,21 @@ proc simulation {} {
 }
 
 proc check {} {
-	global ns agent_A_sender agent_D_sender time expectedPacketsAD expectedPacketsDA n
-	
-	set time [$ns now]
-	set time [expr $time + 0.1]
+	global ns agent_A_sender agent_D_sender times expectedPacketsAD expectedPacketsDA n
 
 	set receivedPacketsAD [$agent_A_sender set ack_]
 	set receivedPacketsDA [$agent_D_sender set ack_]
 	
-	puts "(# $n) A received acks: $receivedPacketsAD ([$ns now])"
-	puts "(# $n) D received acks: $receivedPacketsDA ([$ns now])"
+	puts "#$n) A received acks: $receivedPacketsAD ([$ns now])"
+	puts "#$n) D received acks: $receivedPacketsDA ([$ns now])"
 	
 	if { $expectedPacketsAD >= $receivedPacketsAD || $expectedPacketsDA >= $receivedPacketsDA } {
-		$ns at $time "check"
+		$ns at [expr [$ns now] + 0.1] "check"
 	} else {
+		set times($n) [$ns now]
 		set n [expr $n + 1]
-		$ns at $time "simulation"
+		$ns at [expr [$ns now] + 0.1] "simulation"
+		
 	}
 }
 
