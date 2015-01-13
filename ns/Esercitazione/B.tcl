@@ -62,9 +62,6 @@ $ns duplex-link $C $D 100Mb 1ms DropTail
 $ns simplex-link $B $C 7Mb   200ms DropTail
 $ns simplex-link $C $B 480Kb 200ms DropTail
 
-$ns queue-limit $B $C 20
-$ns queue-limit $C $B 20
-
 
 # loss
 
@@ -132,8 +129,22 @@ set n 0
 set simulations 10 ;# numero di simulazioni
 set times(0) 0
 
+# queue limits
+
+set queueLimit(0) 2
+set queueLimit(1) 4 
+set queueLimit(2) 8
+set queueLimit(3) 16
+set queueLimit(4) 32
+set queueLimit(5) 64
+set queueLimit(6) 128
+set queueLimit(7) 256
+set queueLimit(8) 512
+set queueLimit(9) 1024
+
+
 proc simulation {} {
-	global ns ftpAD ftpDA n dataAD dataDA agent_A_sender agent_D_sender simulations times
+	global ns ftpAD ftpDA n dataAD dataDA agent_A_sender agent_D_sender simulations times B C queueLimit
 	
 	if {$n == $simulations} {
 		set deltaTimes(0) $times(0)
@@ -142,37 +153,12 @@ proc simulation {} {
 			set deltaTimes($i) [expr "$times($i) - $times([expr "$i - 1"])"]
 		}
 
-		set average 0
-
-		for { set i 0 } { $i < $simulations } {incr i} {
-			puts "$i) $deltaTimes($i) $times($i)"
-			set average [expr $average + $deltaTimes($i)]
-		}
-
-		set average [expr $average / $n]
-		puts "\nAverage: $average"
-
-		set deviation 0
-
-		for { set i 0 } { $i < $simulations } {incr i} {
-			set tmp [expr $deltaTimes($i) - $average]
-			set tmp [expr $tmp * $tmp]
-			set deviation [expr $deviation + $tmp]
-		}
-
-		set deviation [expr $deviation / $n]
-		set deviation [expr sqrt($deviation)]
-		puts "Standard deviation: $deviation"
-
-		set z 1.644854
-		set err [expr $z * $deviation * sqrt($n)]
-		set inf [expr $average - $err]
-		set sup [expr $average + $err]
-		puts "Confidence interval: ($inf - $sup)"
-
 		$ns at [$ns now] "finish"
-		
+
 	} else {
+		$ns queue-limit $B $C queueLimit($n)
+		$ns queue-limit $C $B queueLimit($n)
+
 		$ns at [expr [$ns now] + 0.1] "$ftpAD send $dataAD"
 		$ns at [expr [$ns now] + 0.1] "$ftpDA send $dataDA"
 		$ns at [expr [$ns now] + 0.2] "check"
