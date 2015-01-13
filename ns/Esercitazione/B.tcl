@@ -5,6 +5,7 @@ set ns [new Simulator]
 
 #set fd [open out.nam w]
 #$ns namtrace-all $fd
+set graph [open graph.tr w]
 
 #set tracefile [open tracefile.txt w]
 
@@ -12,10 +13,15 @@ set ns [new Simulator]
 # finish procedure
 
 proc finish {} {
-	#global ns fd tracefile
+	global ns fd tracefile graph
 	#$ns flush-trace
 	#close $fd
 	#close $tracefile
+	close $graph
+	
+	# COMMENTATO PERCHE' NON FUNZIONA NEL MAC, ANCHE SE IL COMANDO XGRAPH E' PRESENTE
+	#exec xgraph graph.tr &
+	
 	#exec nam out.nam &
 	exit 0
 }
@@ -144,7 +150,7 @@ set queueLimit(9) 20
 
 
 proc simulation {} {
-	global ns ftpAD ftpDA n dataAD dataDA agent_A_sender agent_D_sender simulations times B C queueLimit
+	global ns ftpAD ftpDA n dataAD dataDA agent_A_sender agent_D_sender simulations times B C queueLimit graph
 	
 	if {$n == $simulations} {
 		set deltaTimes(0) $times(0)
@@ -155,6 +161,7 @@ proc simulation {} {
 		
 		for { set i 0 } { $i < $simulations } {incr i} {
 			puts "$i) $deltaTimes($i)\t $times($i)\t (queue-limit: $queueLimit($i))"
+			 puts $graph "$deltaTimes($i) $queueLimit($i)"; 
 		}
 
 		$ns at [$ns now] "finish"
