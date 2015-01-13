@@ -21,15 +21,15 @@ proc finish {} {
 }
 
 
-# perdite di pacchetti: na, nb identificano il link 
+# loss procedure 
 proc loss {rate na nb} {
 	set ns [Simulator info instances]
 	set em1 [new ErrorModel]
-	$em1 unit EU_PKT		;# errori a livello di pacchetto
+	$em1 unit EU_PKT
 	$em1 set rate_ $rate
 	$em1 ranvar [new RandomVariable/Uniform]
 	$em1 drop-target [new Agent/Null]
-	$ns lossmodel $em1 $na $nb	;#collega il lossmodel al link assegnato
+	$ns lossmodel $em1 $na $nb
 }
 
 
@@ -145,7 +145,7 @@ proc simulation {} {
 		set average 0
 
 		for { set i 0 } { $i < $simulations } {incr i} {
-			puts "$i) $deltaTimes($i) $times($i)"
+			puts "$i) $deltaTimes($i)"
 			set average [expr $average + $deltaTimes($i)]
 		}
 

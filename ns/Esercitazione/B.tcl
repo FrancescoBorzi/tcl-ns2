@@ -20,6 +20,7 @@ proc finish {} {
 	close $graph
 	
 	# COMMENTATO PERCHE' NON FUNZIONA NEL MAC, ANCHE SE IL COMANDO XGRAPH E' PRESENTE
+	# PER GENERARE IL GRAFICO HO ESEGUITO "xgraph graph.tr" MANUALMENTE
 	#exec xgraph graph.tr &
 	
 	#exec nam out.nam &
@@ -27,15 +28,15 @@ proc finish {} {
 }
 
 
-# perdite di pacchetti: na, nb identificano il link 
+# loss procedure
 proc loss {rate na nb} {
 	set ns [Simulator info instances]
 	set em1 [new ErrorModel]
-	$em1 unit EU_PKT		;# errori a livello di pacchetto
+	$em1 unit EU_PKT
 	$em1 set rate_ $rate
 	$em1 ranvar [new RandomVariable/Uniform]
 	$em1 drop-target [new Agent/Null]
-	$ns lossmodel $em1 $na $nb	;#collega il lossmodel al link assegnato
+	$ns lossmodel $em1 $na $nb
 }
 
 
@@ -160,7 +161,7 @@ proc simulation {} {
 		}
 		
 		for { set i 0 } { $i < $simulations } {incr i} {
-			puts "$i) $deltaTimes($i)\t $times($i)\t (queue-limit: $queueLimit($i))"
+			puts "$i) $deltaTimes($i)\t (queue-limit: $queueLimit($i))"
 			 puts $graph "$deltaTimes($i) $queueLimit($i)"; 
 		}
 
@@ -183,8 +184,8 @@ proc check {} {
 	set receivedPacketsAD [$agent_A_sender set ack_]
 	set receivedPacketsDA [$agent_D_sender set ack_]
 	
-	puts "#$n) A received acks: $receivedPacketsAD ([$ns now])"
-	puts "#$n) D received acks: $receivedPacketsDA ([$ns now])"
+	#puts "#$n) A received acks: $receivedPacketsAD ([$ns now])"
+	#puts "#$n) D received acks: $receivedPacketsDA ([$ns now])"
 	
 	if { $expectedPacketsAD >= $receivedPacketsAD || $expectedPacketsDA >= $receivedPacketsDA } {
 		$ns at [expr [$ns now] + 0.1] "check"
