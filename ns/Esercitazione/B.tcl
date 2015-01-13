@@ -152,12 +152,16 @@ proc simulation {} {
 		for { set i 1 } { $i < $simulations } { incr i } {
 			set deltaTimes($i) [expr "$times($i) - $times([expr "$i - 1"])"]
 		}
+		
+		for { set i 0 } { $i < $simulations } {incr i} {
+			puts "$i) $deltaTimes($i) $times($i) (queue-limit: $queueLimit($i))"
+		}
 
 		$ns at [$ns now] "finish"
 
 	} else {
-		$ns queue-limit $B $C queueLimit($n)
-		$ns queue-limit $C $B queueLimit($n)
+		$ns queue-limit $B $C $queueLimit($n)
+		$ns queue-limit $C $B $queueLimit($n)
 
 		$ns at [expr [$ns now] + 0.1] "$ftpAD send $dataAD"
 		$ns at [expr [$ns now] + 0.1] "$ftpDA send $dataDA"
@@ -172,8 +176,8 @@ proc check {} {
 	set receivedPacketsAD [$agent_A_sender set ack_]
 	set receivedPacketsDA [$agent_D_sender set ack_]
 	
-	#puts "#$n) A received acks: $receivedPacketsAD ([$ns now])"
-	#puts "#$n) D received acks: $receivedPacketsDA ([$ns now])"
+	puts "#$n) A received acks: $receivedPacketsAD ([$ns now])"
+	puts "#$n) D received acks: $receivedPacketsDA ([$ns now])"
 	
 	if { $expectedPacketsAD >= $receivedPacketsAD || $expectedPacketsDA >= $receivedPacketsDA } {
 		$ns at [expr [$ns now] + 0.1] "check"
