@@ -133,14 +133,14 @@ set times(0) 0
 
 set queueLimit(0) 2
 set queueLimit(1) 4 
-set queueLimit(2) 8
-set queueLimit(3) 16
-set queueLimit(4) 32
-set queueLimit(5) 64
-set queueLimit(6) 128
-set queueLimit(7) 256
-set queueLimit(8) 512
-set queueLimit(9) 1024
+set queueLimit(2) 6
+set queueLimit(3) 8
+set queueLimit(4) 10
+set queueLimit(5) 12
+set queueLimit(6) 14
+set queueLimit(7) 16
+set queueLimit(8) 18
+set queueLimit(9) 20
 
 
 proc simulation {} {
@@ -154,7 +154,7 @@ proc simulation {} {
 		}
 		
 		for { set i 0 } { $i < $simulations } {incr i} {
-			puts "$i) $deltaTimes($i) $times($i) (queue-limit: $queueLimit($i))"
+			puts "$i) $deltaTimes($i)\t $times($i)\t (queue-limit: $queueLimit($i))"
 		}
 
 		$ns at [$ns now] "finish"
