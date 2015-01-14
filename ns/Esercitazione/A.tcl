@@ -165,7 +165,7 @@ proc simulation {} {
 		puts "Standard deviation: $deviation"
 
 		set z 1.644854
-		set err [expr $z * $deviation * sqrt($n)]
+		set err [expr $z * $deviation / sqrt($n)]
 		set inf [expr $average - $err]
 		set sup [expr $average + $err]
 		puts "Confidence interval: ($inf - $sup)"
